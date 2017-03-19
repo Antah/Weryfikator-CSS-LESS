@@ -28,5 +28,10 @@ namespace Weryfikator
             if (result == DialogResult.Cancel) return;
             textBox1.Text = openFileDialog1.FileName;
         }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }
