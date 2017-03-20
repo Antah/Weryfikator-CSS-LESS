@@ -35,6 +35,8 @@ namespace Weryfikator
         HASH,
         UNIT,
         END,
-        FUNCTION
+        FUNCTION,
+        SLASH,
+        DOT
     }
 }
