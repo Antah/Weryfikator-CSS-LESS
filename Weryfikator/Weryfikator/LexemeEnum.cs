@@ -1,9 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Text.RegularExpressions;
 
 namespace Weryfikator
 {
@@ -17,7 +13,7 @@ namespace Weryfikator
         SEMICOLON,
         AT,
         WHITESPACE,
-        TEXT,
+        NAME,
         COLOR,
         NUMBER,
         QUOTATION,
@@ -33,47 +29,56 @@ namespace Weryfikator
         MINUS,
         STAR,
         COMMA,
-        HASH,
+        CLASS,
         UNIT,
         END,
         FUNCTION,
         SLASH,
-        DOT
+        ID,
+        VARIABLE,
+        TEXT,
+        DEFAULT
     }
 
     public static class LexemeHashTable
     {
         internal static Dictionary<Lexeme, String> LexemeDictinary = new Dictionary<Lexeme, String>
         {
-            { Lexeme.OPENING_BRACE, "{" },
-            { Lexeme.CLOSING_BRACE, "}" },
-            { Lexeme.OPENING_PARENTHESIS, "(" },
-            { Lexeme.CLOSING_PARENTHESIS, ")" },
-            { Lexeme.COLON, ":" },
-            { Lexeme.SEMICOLON, ";" },
-            { Lexeme.AT, "@" },
-            { Lexeme.WHITESPACE, "" },
-            { Lexeme.TEXT, "" },
-            { Lexeme.COLOR, "" },
-            { Lexeme.NUMBER, "" },
-            { Lexeme.QUOTATION, "" },
-            { Lexeme.CLOSING_ANGLE_BRACKET, ">" },
-            { Lexeme.TILDE, "~" },
-            { Lexeme.OPEN_COMMENT, "/*" },
-            { Lexeme.CLOSE_COMMENT, "*/" },
-            { Lexeme.LINE_COMMENT, "" },
-            { Lexeme.DOUBLESLASH, "//" },
-            { Lexeme.NEW_LINE, "\n" },
-            { Lexeme.PLUS, "+" },
-            { Lexeme.MINUS, "-" },
-            { Lexeme.STAR, "*" },
-            { Lexeme.COMMA, "," },
-            { Lexeme.HASH, "#" },
-            { Lexeme.UNIT, "" },
-            { Lexeme.END, "" },
-            { Lexeme.FUNCTION, "" },
-            { Lexeme.SLASH, "/" },
-            { Lexeme.DOT, "." },
+            { Lexeme.OPENING_BRACE, @"^\s*\{" },
+            { Lexeme.CLOSING_BRACE, @"^\s*\}" },
+            { Lexeme.OPENING_PARENTHESIS, @"^\s*\(" },
+            { Lexeme.CLOSING_PARENTHESIS, @"^\s*\)" },
+            { Lexeme.CLOSING_ANGLE_BRACKET, @"\s*>" },
+
+            { Lexeme.COLON, @"^\s*:" },
+            { Lexeme.SEMICOLON, @"^\s*;" },
+            { Lexeme.COMMA, @"\s*," },           
+            { Lexeme.QUOTATION, @"\s*[""']" },          
+            { Lexeme.TILDE, @"\s*~" },
+
+            { Lexeme.OPEN_COMMENT, @"^\s*/\*" },
+            { Lexeme.CLOSE_COMMENT, @"^\s*\*/" },
+            { Lexeme.DOUBLESLASH, @"//" },
+
+            { Lexeme.WHITESPACE, @"^\s+" },
+            { Lexeme.NEW_LINE, @"\n" },
+
+            { Lexeme.PLUS, @"^\s*\+" },
+            { Lexeme.MINUS, @"^\s*-" },
+            { Lexeme.STAR, @"^\s*\*" },
+            { Lexeme.SLASH, @"^\s*/" },
+            
+            { Lexeme.FUNCTION, @"\s*[A-Za-z0-9\*]+\(" }, 
+
+            { Lexeme.NUMBER, @"^\s*-?[0-9]+(\.[0-9]+)?(\s*(px|%))?" },
+            { Lexeme.COLOR, @"\s*\#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?" },
+
+            { Lexeme.TEXT, @"^[^""']*" },
+            { Lexeme.NAME, @"^\s*[A-Za-z0-9\*-]+" },
+
+            { Lexeme.CLASS, @"^\s*\#[A-Za-z0-9\*]+" },
+            { Lexeme.ID, @"^\s*\.[A-Za-z0-9\*]+" },
+            { Lexeme.VARIABLE, @"^\s*\@[A-Za-z0-9\*]+" }
         };
         
     }

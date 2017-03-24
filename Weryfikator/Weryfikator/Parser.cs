@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Weryfikator;
 
 namespace Weryfikator
 {
@@ -11,50 +6,39 @@ namespace Weryfikator
     {
         private static Lexeme current_lexeme;
 
-        private static void withdrawLexem(Lexeme dOUBLESLASH)
+        private static void withdrawLexem(Lexeme lex)
         {
-            throw new NotImplementedException();
+            Lexer.withdrawLexem(lex);
         }
 
-        public static void parserStart()
+        private static void withdrawWhitespace()
         {
+            Lexer.checkForWhitespace();
+        }
+
+        public static void parserStart(string text)
+        {
+            Lexer.setText(text);
             parserList();
         }
 
         private static void parserEnd()
         {
-            withdrawLexem(Lexeme.END);
+            
         }
 
         private static void parserList()
         {
+            current_lexeme = Lexer.getNewLexeme();
             switch (current_lexeme)
             {
                 // variable
-                case Lexeme.AT:
-                    withdrawLexem(Lexeme.AT);
-                    withdrawLexem(Lexeme.TEXT);
+                case Lexeme.VARIABLE:
+                    withdrawLexem(Lexeme.VARIABLE);
                     withdrawLexem(Lexeme.COLON);
                     parserValue();
                     withdrawLexem(Lexeme.SEMICOLON);
                     break;
-
-                // comment
-                case Lexeme.DOUBLESLASH:
-                    withdrawLexem(Lexeme.DOUBLESLASH);
-                    withdrawLexem(Lexeme.LINE_COMMENT);
-                    withdrawLexem(Lexeme.NEW_LINE);
-                    break;
-                case Lexeme.OPEN_COMMENT:
-                    withdrawLexem(Lexeme.OPEN_COMMENT);
-                    withdrawLexem(Lexeme.COMMENT);
-                    withdrawLexem(Lexeme.CLOSE_COMMENT);
-                    break;
-
-                //end
-                case Lexeme.END:
-                    parserEnd();
-                    return;
 
                 // style
                 default:
@@ -68,62 +52,75 @@ namespace Weryfikator
             parserList();
         }
 
-        private static void parserDefinition()
+        private static void parserValue()
         {
+            current_lexeme = Lexer.getValueLexeme();
             switch (current_lexeme)
             {
-                // comment
-                case Lexeme.DOUBLESLASH:
-                    withdrawLexem(Lexeme.DOUBLESLASH);
-                    withdrawLexem(Lexeme.LINE_COMMENT);
-                    withdrawLexem(Lexeme.NEW_LINE);
+                case Lexeme.VARIABLE:
+                    withdrawLexem(Lexeme.VARIABLE);
                     break;
-                case Lexeme.OPEN_COMMENT:
-                    withdrawLexem(Lexeme.OPEN_COMMENT);
-                    withdrawLexem(Lexeme.COMMENT);
-                    withdrawLexem(Lexeme.CLOSE_COMMENT);
-                    break;
-
-                // property
-                case Lexeme.TEXT:
+                case Lexeme.QUOTATION:
+                    withdrawLexem(Lexeme.QUOTATION);
                     withdrawLexem(Lexeme.TEXT);
-                    withdrawLexem(Lexeme.COLON);
+                    withdrawLexem(Lexeme.QUOTATION);
+                    break;
+                case Lexeme.COLOR:
+                    withdrawLexem(Lexeme.COLOR);
+                    break;
+                case Lexeme.NUMBER:
+                    withdrawLexem(Lexeme.NUMBER);
+                    break;
+                /*case Lexeme.OPENING_PARENTHESIS:
+                    withdrawLexem(Lexeme.OPENING_PARENTHESIS);
+                    parserOperationHead();
+                    parserOperationTail();
+                    withdrawLexem(Lexeme.CLOSING_PARENTHESIS);
+                    break;*/
+                case Lexeme.FUNCTION:
+                    withdrawLexem(Lexeme.FUNCTION);
                     parserValue();
-                    parserProperties();
-                    withdrawLexem(Lexeme.SEMICOLON);
+                    parserFunction();
+                    withdrawLexem(Lexeme.CLOSING_PARENTHESIS);
+                    break;
+                case Lexeme.NAME:
+                    withdrawLexem(Lexeme.NAME);
                     break;
                 default:
-                    return;
+                    throw new NotImplementedException();
+                    break;
             }
-            parserDefinition();
         }
 
-        private static void parserProperties()
+        private static void parserFunction()
         {
+            current_lexeme = Lexer.getFunctionLexeme();
             switch (current_lexeme)
             {
-                case Lexeme.SEMICOLON:
-                    return;
-                default:
+                case Lexeme.COMMA:
+                    withdrawLexem(Lexeme.COMMA);
                     parserValue();
+                    break;
+                default:
                     break;
             }
         }
 
         private static void parserSelector()
         {
+            current_lexeme = Lexer.getSelectorLexeme();
             switch (current_lexeme)
             {
-                case Lexeme.HASH:
-                    withdrawLexem(Lexeme.HASH);
-                    withdrawLexem(Lexeme.TEXT);
+                case Lexeme.CLASS:
+                    withdrawLexem(Lexeme.CLASS);
+                    withdrawLexem(Lexeme.NAME);
                     break;
-                case Lexeme.DOT:
-                    withdrawLexem(Lexeme.DOT);
-                    withdrawLexem(Lexeme.TEXT);
+                case Lexeme.ID:
+                    withdrawLexem(Lexeme.ID);
+                    withdrawLexem(Lexeme.NAME);
                     break;
-                case Lexeme.TEXT:
-                    withdrawLexem(Lexeme.TEXT);
+                case Lexeme.NAME:
+                    withdrawLexem(Lexeme.NAME);
                     parserComplexSelector();
                     break;
                 default:
@@ -132,8 +129,27 @@ namespace Weryfikator
             }
         }
 
+        private static void parserComplexSelector()
+        {
+            current_lexeme = Lexer.getComplexSelectorLexeme();
+            switch (current_lexeme)
+            {
+                case Lexeme.CLASS:
+                    withdrawLexem(Lexeme.CLASS);
+                    withdrawLexem(Lexeme.NAME);
+                    break;
+                case Lexeme.ID:
+                    withdrawLexem(Lexeme.ID);
+                    withdrawLexem(Lexeme.NAME);
+                    break;
+                default:
+                    break;
+            }
+        }
+
         private static void parserSelectorTail()
         {
+            current_lexeme = Lexer.getSelectorTailLexeme();
             switch (current_lexeme)
             {
                 case Lexeme.TILDE:
@@ -162,6 +178,7 @@ namespace Weryfikator
 
         private static void parserSelectorGroup()
         {
+            current_lexeme = Lexer.getSelectorGroupLexeme();
             parserSelector();
             switch (current_lexeme)
             {
@@ -174,73 +191,55 @@ namespace Weryfikator
             }
         }
 
-        private static void parserComplexSelector()
+        private static void parserDefinition()
         {
+            current_lexeme = Lexer.getDefinitionLexeme();
             switch (current_lexeme)
             {
-                case Lexeme.HASH:
-                    withdrawLexem(Lexeme.HASH);
-                    withdrawLexem(Lexeme.TEXT);
-                    break;
-                case Lexeme.DOT:
-                    withdrawLexem(Lexeme.DOT);
-                    withdrawLexem(Lexeme.TEXT);
+                case Lexeme.NAME:
+                    withdrawLexem(Lexeme.NAME);
+                    withdrawLexem(Lexeme.COLON);
+                    parserValue();
+                    parserProperties();
                     break;
                 default:
+                    return;
+            }
+            parserDefinition();
+        }
+
+        private static void parserProperties()
+        {
+            current_lexeme = Lexer.getPropertiesLexeme();
+            switch (current_lexeme)
+            {
+                case Lexeme.SEMICOLON:
+                    withdrawLexem(Lexeme.SEMICOLON);
+                    break;
+                default:
+                    withdrawWhitespace();
+                    parserValue();
+                    parserProperties();
                     break;
             }
         }
 
-        private static void parserValue()
+        private static void parserOperationHead()
         {
+            throw new NotImplementedException();
             switch (current_lexeme)
             {
-                case Lexeme.AT:
-                    withdrawLexem(Lexeme.AT);
-                    withdrawLexem(Lexeme.TEXT);
-                    break;
-                case Lexeme.QUOTATION:
-                    withdrawLexem(Lexeme.QUOTATION);
-                    withdrawLexem(Lexeme.TEXT);
-                    withdrawLexem(Lexeme.QUOTATION);
-                    break;
                 case Lexeme.COLOR:
                     withdrawLexem(Lexeme.COLOR);
                     break;
                 case Lexeme.NUMBER:
                     withdrawLexem(Lexeme.NUMBER);
-                    parserUnit();
                     break;
                 case Lexeme.OPENING_PARENTHESIS:
                     withdrawLexem(Lexeme.OPENING_PARENTHESIS);
                     parserOperationHead();
                     parserOperationTail();
                     withdrawLexem(Lexeme.CLOSING_PARENTHESIS);
-                    break;
-                case Lexeme.FUNCTION:
-                    withdrawLexem(Lexeme.FUNCTION);
-                    parserValue();
-                    parserFunction();
-                    withdrawLexem(Lexeme.CLOSING_PARENTHESIS);
-                    break;
-                case Lexeme.TEXT:
-                    withdrawLexem(Lexeme.TEXT);
-                    break;
-                default:
-                    throw new NotImplementedException();
-                    break;
-            }
-        }
-
-        private static void parserFunction()
-        {
-            switch (current_lexeme)
-            {
-                case Lexeme.COMMA:
-                    withdrawLexem(Lexeme.COMMA;
-                    parserValue();
-                    break;
-                default:
                     break;
             }
         }
@@ -269,41 +268,5 @@ namespace Weryfikator
                     break;
             }
         }
-
-        private static void parserUnit()
-        {
-            switch (current_lexeme)
-            {
-                case Lexeme.UNIT:
-                    withdrawLexem(Lexeme.UNIT);
-                    parserOperationHead();
-                    break;
-                default:
-                    break;
-            }
-        }
-
-        private static void parserOperationHead()
-        {
-            throw new NotImplementedException();
-            switch (current_lexeme)
-            {
-                case Lexeme.COLOR:
-                    withdrawLexem(Lexeme.COLOR);
-                    break;
-                case Lexeme.NUMBER:
-                    withdrawLexem(Lexeme.NUMBER);
-                    parserUnit();
-                    break;
-                case Lexeme.OPENING_PARENTHESIS:
-                    withdrawLexem(Lexeme.OPENING_PARENTHESIS);
-                    parserOperationHead();
-                    parserOperationTail();
-                    withdrawLexem(Lexeme.CLOSING_PARENTHESIS);
-                    break;
-            }
-        }
-
-
     }
 }

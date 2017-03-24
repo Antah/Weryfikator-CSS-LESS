@@ -1,18 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
+using System.IO;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Weryfikator
 {
-    public partial class Form1 : Form
+    public partial class VerificatorForm : Form
     {
-        public Form1()
+        public string text;
+        public VerificatorForm()
         {
             InitializeComponent();
         }
@@ -29,9 +25,31 @@ namespace Weryfikator
             textBox1.Text = openFileDialog1.FileName;
         }
 
+        public void SetText(string textTmp)
+        {
+            richTextBox1.Text = textTmp;
+        }
+
         private void button2_Click(object sender, EventArgs e)
         {
+            if (textBox1.Text != null)
+            {
+                try
+                {
+                    text = File.ReadAllText(textBox1.Text, Encoding.UTF8);
+                    richTextBox1.Text = text;
+                }
+                catch
+                {
+                    text = "nie udało się wczytać pliku";
+                    richTextBox1.Text = text;
+                }
+            }
+        }
 
+        private void button3_Click(object sender, EventArgs e)
+        {
+            Parser.parserStart(text);
         }
     }
 }
