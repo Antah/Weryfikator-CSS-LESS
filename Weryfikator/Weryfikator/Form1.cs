@@ -13,7 +13,7 @@ namespace Weryfikator
             InitializeComponent();
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void buttonSearch_Click(object sender, EventArgs e)
         {
             openFileDialog1.InitialDirectory = "c:\\";
             openFileDialog1.Filter = "txt files (*.txt)|*.txt|All files (*.*)|*.*";
@@ -22,34 +22,49 @@ namespace Weryfikator
 
             var result = openFileDialog1.ShowDialog();
             if (result == DialogResult.Cancel) return;
-            textBox1.Text = openFileDialog1.FileName;
+            textBoxSearch.Text = openFileDialog1.FileName;
         }
 
         public void SetText(string textTmp)
         {
-            richTextBox1.Text = textTmp;
+            richTextBoxCode.Text = textTmp;
         }
 
-        private void button2_Click(object sender, EventArgs e)
+        private void buttonLoad_Click(object sender, EventArgs e)
         {
-            if (textBox1.Text != null)
+            if (textBoxSearch.Text != null)
             {
                 try
                 {
-                    text = File.ReadAllText(textBox1.Text, Encoding.UTF8);
-                    richTextBox1.Text = text;
+                    text = File.ReadAllText(textBoxSearch.Text, Encoding.UTF8);
+                    richTextBoxCode.Text = text;
                 }
                 catch
                 {
-                    text = "nie udało się wczytać pliku";
-                    richTextBox1.Text = text;
+                    textBoxMessage.Text = "Failed to load file.";
+                    richTextBoxCode.Text = "";
                 }
             }
         }
 
-        private void button3_Click(object sender, EventArgs e)
+        private void buttonVerify_Click(object sender, EventArgs e)
         {
             Parser.parserStart(text);
+        }
+
+        internal void SetErrorMessage(string message)
+        {
+            textBoxMessage.Text = message;
+        }
+
+        private void VerificatorForm_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void richTextBoxCode_TextChanged(object sender, EventArgs e)
+        {
+            text = richTextBoxCode.Text;
         }
     }
 }

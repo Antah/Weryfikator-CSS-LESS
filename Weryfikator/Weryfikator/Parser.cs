@@ -6,266 +6,228 @@ namespace Weryfikator
     {
         private static Lexeme current_lexeme;
 
-        private static void withdrawLexem(Lexeme lex)
+        private static bool withdrawLexem(Lexeme lex)
         {
-            Lexer.withdrawLexem(lex);
+            return Lexer.withdrawLexem(lex);
         }
 
-        private static void withdrawWhitespace()
-        {
-            Lexer.checkForWhitespace();
-        }
-
-        public static void parserStart(string text)
+        public static bool parserStart(string text)
         {
             Lexer.setText(text);
-            parserList();
+            if (!parserList())
+                return false;
+
+            Program.form.SetErrorMessage("Verification successful.");
+            return true;
         }
 
-        private static void parserEnd()
-        {
-            
-        }
-
-        private static void parserList()
+        private static bool parserList()
         {
             current_lexeme = Lexer.getNewLexeme();
             switch (current_lexeme)
             {
                 // variable
                 case Lexeme.VARIABLE:
-                    withdrawLexem(Lexeme.VARIABLE);
-                    withdrawLexem(Lexeme.COLON);
-                    parserValue();
-                    withdrawLexem(Lexeme.SEMICOLON);
+                    if (!withdrawLexem(Lexeme.VARIABLE)
+                        || !withdrawLexem(Lexeme.COLON)
+                        || !parserValue()
+                        || !withdrawLexem(Lexeme.SEMICOLON))
+                        return false;
                     break;
+
+                case Lexeme.END:
+                    return true;
 
                 // style
                 default:
-                    parserSelector();
-                    parserSelectorTail();
-                    withdrawLexem(Lexeme.OPENING_BRACE);
-                    parserDefinition();
-                    withdrawLexem(Lexeme.CLOSING_BRACE);
+                    if (!parserSelector()
+                        || !parserSelectorTail()
+                        || !withdrawLexem(Lexeme.OPENING_BRACE)
+                        || !parserDefinition()
+                        || !withdrawLexem(Lexeme.CLOSING_BRACE))
+                        return false;
                     break;
             }
-            parserList();
+            return parserList();
         }
 
-        private static void parserValue()
+        private static bool parserValue()
         {
             current_lexeme = Lexer.getValueLexeme();
             switch (current_lexeme)
             {
                 case Lexeme.VARIABLE:
-                    withdrawLexem(Lexeme.VARIABLE);
-                    break;
+                    if (!withdrawLexem(Lexeme.VARIABLE))
+                        return false;
+                    return true;
                 case Lexeme.QUOTATION:
-                    withdrawLexem(Lexeme.QUOTATION);
-                    withdrawLexem(Lexeme.TEXT);
-                    withdrawLexem(Lexeme.QUOTATION);
-                    break;
+                    if (!withdrawLexem(Lexeme.QUOTATION)
+                    || !withdrawLexem(Lexeme.TEXT)
+                    || !withdrawLexem(Lexeme.QUOTATION))
+                        return false;
+                    return true;
                 case Lexeme.COLOR:
-                    withdrawLexem(Lexeme.COLOR);
-                    break;
+                    if (!withdrawLexem(Lexeme.COLOR))
+                        return false;
+                    return true;
                 case Lexeme.NUMBER:
-                    withdrawLexem(Lexeme.NUMBER);
-                    break;
-                /*case Lexeme.OPENING_PARENTHESIS:
-                    withdrawLexem(Lexeme.OPENING_PARENTHESIS);
-                    parserOperationHead();
-                    parserOperationTail();
-                    withdrawLexem(Lexeme.CLOSING_PARENTHESIS);
-                    break;*/
+                    if (!withdrawLexem(Lexeme.NUMBER))
+                        return false;
+                    return true;
                 case Lexeme.FUNCTION:
-                    withdrawLexem(Lexeme.FUNCTION);
-                    parserValue();
-                    parserFunction();
-                    withdrawLexem(Lexeme.CLOSING_PARENTHESIS);
-                    break;
+                    if (!withdrawLexem(Lexeme.FUNCTION)
+                    || !parserValue()
+                    || !parserFunction()
+                    || !withdrawLexem(Lexeme.CLOSING_PARENTHESIS))
+                        return false;
+                    return true;
                 case Lexeme.NAME:
-                    withdrawLexem(Lexeme.NAME);
-                    break;
+                    if (!withdrawLexem(Lexeme.NAME))
+                        return false;
+                    return true;
                 default:
-                    throw new NotImplementedException();
-                    break;
+                    return false;
             }
         }
 
-        private static void parserFunction()
+        private static bool parserFunction()
         {
             current_lexeme = Lexer.getFunctionLexeme();
             switch (current_lexeme)
             {
                 case Lexeme.COMMA:
-                    withdrawLexem(Lexeme.COMMA);
-                    parserValue();
-                    break;
+                    if (!withdrawLexem(Lexeme.COMMA)
+                    || !parserValue())
+                        return false;
+                    return true;
                 default:
-                    break;
+                    return true;
             }
         }
 
-        private static void parserSelector()
+        private static bool parserSelector()
         {
             current_lexeme = Lexer.getSelectorLexeme();
             switch (current_lexeme)
             {
                 case Lexeme.CLASS:
-                    withdrawLexem(Lexeme.CLASS);
-                    withdrawLexem(Lexeme.NAME);
-                    break;
+                    if (!withdrawLexem(Lexeme.CLASS))
+                        return false;
+                    return true;
                 case Lexeme.ID:
-                    withdrawLexem(Lexeme.ID);
-                    withdrawLexem(Lexeme.NAME);
-                    break;
+                    if (!withdrawLexem(Lexeme.ID))
+                        return false;
+                    return true;
                 case Lexeme.NAME:
-                    withdrawLexem(Lexeme.NAME);
-                    parserComplexSelector();
-                    break;
+                    if (!withdrawLexem(Lexeme.NAME)
+                    || !parserComplexSelector())
+                        return false;
+                    return true;
                 default:
-                    throw new NotImplementedException();
-                    break;
+                    return false;
             }
         }
 
-        private static void parserComplexSelector()
+        private static bool parserComplexSelector()
         {
             current_lexeme = Lexer.getComplexSelectorLexeme();
             switch (current_lexeme)
             {
                 case Lexeme.CLASS:
-                    withdrawLexem(Lexeme.CLASS);
-                    withdrawLexem(Lexeme.NAME);
-                    break;
+                    if (!withdrawLexem(Lexeme.CLASS))
+                        return false;
+                    return true;
                 case Lexeme.ID:
-                    withdrawLexem(Lexeme.ID);
-                    withdrawLexem(Lexeme.NAME);
-                    break;
+                    if (!withdrawLexem(Lexeme.ID))
+                        return false;
+                    return true;
                 default:
-                    break;
+                    return true;
             }
         }
 
-        private static void parserSelectorTail()
+        private static bool parserSelectorTail()
         {
             current_lexeme = Lexer.getSelectorTailLexeme();
             switch (current_lexeme)
             {
                 case Lexeme.TILDE:
-                    withdrawLexem(Lexeme.TILDE);
-                    parserSelector();
-                    parserSelectorTail();
-                    break;
+                    if (!withdrawLexem(Lexeme.TILDE)
+                    || !parserSelector()
+                    || !parserSelectorTail())
+                        return false;
+                    return true;
                 case Lexeme.CLOSING_ANGLE_BRACKET:
-                    withdrawLexem(Lexeme.CLOSING_ANGLE_BRACKET);
-                    parserSelector();
-                    parserSelectorTail();
-                    break;
+                    if (!withdrawLexem(Lexeme.CLOSING_ANGLE_BRACKET)
+                    || !parserSelector()
+                    || !parserSelectorTail())
+                        return false;
+                    return true;
                 case Lexeme.PLUS:
-                    withdrawLexem(Lexeme.PLUS);
-                    parserSelector();
-                    parserSelectorTail();
-                    break;
+                    if (!withdrawLexem(Lexeme.PLUS)
+                    || !parserSelector()
+                    || !parserSelectorTail())
+                        return false;
+                    return true;
                 case Lexeme.COMMA:
-                    withdrawLexem(Lexeme.COMMA);
-                    parserSelectorGroup();
-                    break;
+                    if (!withdrawLexem(Lexeme.COMMA)
+                    || !parserSelectorGroup())
+                        return false;
+                    return true;
                 default:
-                    break;
+                    return true;
             }
         }
 
-        private static void parserSelectorGroup()
+        private static bool parserSelectorGroup()
         {
             current_lexeme = Lexer.getSelectorGroupLexeme();
             parserSelector();
             switch (current_lexeme)
             {
                 case Lexeme.COMMA:
-                    withdrawLexem(Lexeme.COMMA);
-                    parserSelectorGroup();
-                    break;
+                    if (!withdrawLexem(Lexeme.COMMA)
+                    || !parserSelectorGroup())
+                        return false;
+                    return true;
                 default:
-                    break;
+                    return true;
             }
         }
 
-        private static void parserDefinition()
+        private static bool parserDefinition()
         {
             current_lexeme = Lexer.getDefinitionLexeme();
             switch (current_lexeme)
             {
                 case Lexeme.NAME:
-                    withdrawLexem(Lexeme.NAME);
-                    withdrawLexem(Lexeme.COLON);
-                    parserValue();
-                    parserProperties();
+                    if (!withdrawLexem(Lexeme.NAME)
+                    || !withdrawLexem(Lexeme.COLON)
+                    || !parserValue()
+                    || !parserProperties())
+                        return false;
                     break;
                 default:
-                    return;
+                    return true;
             }
-            parserDefinition();
+            return parserDefinition();
         }
 
-        private static void parserProperties()
+        private static bool parserProperties()
         {
             current_lexeme = Lexer.getPropertiesLexeme();
             switch (current_lexeme)
             {
                 case Lexeme.SEMICOLON:
-                    withdrawLexem(Lexeme.SEMICOLON);
-                    break;
+                    if (!withdrawLexem(Lexeme.SEMICOLON))
+                        return false;
+                    return true;
                 default:
-                    withdrawWhitespace();
-                    parserValue();
-                    parserProperties();
-                    break;
-            }
-        }
-
-        private static void parserOperationHead()
-        {
-            throw new NotImplementedException();
-            switch (current_lexeme)
-            {
-                case Lexeme.COLOR:
-                    withdrawLexem(Lexeme.COLOR);
-                    break;
-                case Lexeme.NUMBER:
-                    withdrawLexem(Lexeme.NUMBER);
-                    break;
-                case Lexeme.OPENING_PARENTHESIS:
-                    withdrawLexem(Lexeme.OPENING_PARENTHESIS);
-                    parserOperationHead();
-                    parserOperationTail();
-                    withdrawLexem(Lexeme.CLOSING_PARENTHESIS);
-                    break;
-            }
-        }
-
-        private static void parserOperationTail()
-        {
-            switch (current_lexeme)
-            {
-                case Lexeme.STAR:
-                    withdrawLexem(Lexeme.STAR);
-                    parserOperationHead();
-                    break;
-                case Lexeme.SLASH:
-                    withdrawLexem(Lexeme.SLASH);
-                    parserOperationHead();
-                    break;
-                case Lexeme.PLUS:
-                    withdrawLexem(Lexeme.PLUS);
-                    parserOperationHead();
-                    break;
-                case Lexeme.MINUS:
-                    withdrawLexem(Lexeme.MINUS);
-                    parserOperationHead();
-                    break;
-                default:
-                    break;
+                    if (Lexer.checkForWhitespace()
+                    || !parserValue()
+                    || !parserProperties())
+                        return false;
+                    return true;
             }
         }
     }

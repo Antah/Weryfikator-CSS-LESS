@@ -11,20 +11,31 @@ namespace Weryfikator
         internal static void setText(string text)
         {
             textTmp = text;
+            textTmp.Replace("\r\n", "\n").Replace("\r", "\n");
             line = 1;
         }
 
-        internal static void checkForWhitespace()
+        internal static bool checkForWhitespace()
         {
             if (!textTmp.StartsWith(LexemeHashTable.LexemeDictinary[Lexeme.WHITESPACE]))
-                throw new NotImplementedException();
+                return false;
+            return true;
         }
 
-        internal static void withdrawLexem(Lexeme lex)
+        private static bool checkForEOF()
         {
             checkForComment();
             if (!removeWhitespace())
-                throw new NotImplementedException();
+                return false;
+            return true;
+        }
+
+        internal static bool withdrawLexem(Lexeme lex)
+        {
+            if (!checkForEOF()) {
+                Program.form.SetErrorMessage("Error in line: " + line + ". Unexpected EOF.");
+                return false;
+            }
 
             var match = Regex.Match(textTmp, LexemeHashTable.LexemeDictinary[lex]);
 
@@ -33,15 +44,18 @@ namespace Weryfikator
 
                 if (match.Index > 0)
                 {
-                    throw new NotImplementedException();
+                    Program.form.SetErrorMessage("Error in line: " + line + ". Expecting " + lex.ToString() + " lexeme.");
+                    return false;
                 }
 
                 string removedPart = textTmp.Substring(0, match.Length);
                 countSkipedLines(removedPart);
 
                 textTmp = textTmp.Substring(match.Length);
-                Console.WriteLine("removed part: " + removedPart);
+                return true;
             }
+            Program.form.SetErrorMessage("Error in line: " + line + ". Expecting " + lex.ToString() + " lexeme.");
+            return false;
         }
 
         internal static Lexeme getNewLexeme()
@@ -59,14 +73,13 @@ namespace Weryfikator
             if (matchLexeme(Lexeme.NAME))
                 return Lexeme.NAME;
 
+            Program.form.SetErrorMessage("Error in line: " + line + ". Expecting new style or variable.");
             return Lexeme.DEFAULT;
         }
 
         internal static Lexeme getValueLexeme()
         {
-            checkForComment();
-            if (!removeWhitespace())
-                throw new NotImplementedException();
+            checkForEOF();
 
             if (matchLexeme(Lexeme.VARIABLE))
                 return Lexeme.VARIABLE;
@@ -81,19 +94,13 @@ namespace Weryfikator
             if (matchLexeme(Lexeme.NAME))
                 return Lexeme.NAME;
 
-            /*
-            if (textTmp.StartsWith(LexemeHashTable.LexemeDictinary[Lexeme.OPENING_PARENTHESIS]))
-                return Lexeme.OPENING_PARENTHESIS;
-                */
-
+            Program.form.SetErrorMessage("Error in line: " + line + ". Expecting a value.");
             return Lexeme.DEFAULT;
         }
 
         internal static Lexeme getFunctionLexeme()
         {
-            checkForComment();
-            if (!removeWhitespace())
-                throw new NotImplementedException();
+            checkForEOF();
 
             if (matchLexeme(Lexeme.COMMA))
                 return Lexeme.COMMA;
@@ -103,9 +110,7 @@ namespace Weryfikator
 
         internal static Lexeme getSelectorLexeme()
         {
-            checkForComment();
-            if (!removeWhitespace())
-                throw new NotImplementedException();
+            checkForEOF();
 
             if (matchLexeme(Lexeme.CLASS))
                 return Lexeme.CLASS;
@@ -114,14 +119,13 @@ namespace Weryfikator
             if (matchLexeme(Lexeme.NAME))
                 return Lexeme.NAME;
 
+            Program.form.SetErrorMessage("Error in line: " + line + ". Expecting new selector.");
             return Lexeme.DEFAULT;
         }
 
         internal static Lexeme getComplexSelectorLexeme()
         {
-            checkForComment();
-            if (!removeWhitespace())
-                throw new NotImplementedException();
+            checkForEOF();
 
             if (matchLexeme(Lexeme.CLASS))
                 return Lexeme.CLASS;
@@ -133,9 +137,7 @@ namespace Weryfikator
 
         internal static Lexeme getSelectorTailLexeme()
         {
-            checkForComment();
-            if (!removeWhitespace())
-                throw new NotImplementedException();
+            checkForEOF();
 
             if (matchLexeme(Lexeme.TILDE))
                 return Lexeme.TILDE;
@@ -151,9 +153,7 @@ namespace Weryfikator
 
         internal static Lexeme getSelectorGroupLexeme()
         {
-            checkForComment();
-            if (!removeWhitespace())
-                throw new NotImplementedException();
+            checkForEOF();
 
             if (matchLexeme(Lexeme.COMMA))
                 return Lexeme.COMMA;
@@ -163,9 +163,7 @@ namespace Weryfikator
 
         internal static Lexeme getDefinitionLexeme()
         {
-            checkForComment();
-            if (!removeWhitespace())
-                throw new NotImplementedException();
+            checkForEOF();
 
             if (matchLexeme(Lexeme.NAME))
                 return Lexeme.NAME;
@@ -175,9 +173,7 @@ namespace Weryfikator
 
         internal static Lexeme getPropertiesLexeme()
         {
-            checkForComment();
-            if (!removeWhitespace())
-                throw new NotImplementedException();
+            checkForEOF();
 
             if (matchLexeme(Lexeme.SEMICOLON))
                 return Lexeme.SEMICOLON;
@@ -196,12 +192,11 @@ namespace Weryfikator
             else if(textTmp.StartsWith("/*"))
             {
                 int index = textTmp.IndexOf("*/");
-                if(index < 0 )
-                    throw new NotImplementedException();
+                if (index < 2)
+                    return;
 
                 string comment = textTmp.Substring(0, index + 2);
                 countSkipedLines(comment);
-                Console.WriteLine("skipped comment: " + comment);
 
                 textTmp = textTmp.Substring(index + 2);
                 checkForComment();
@@ -232,16 +227,15 @@ namespace Weryfikator
         private static string removeFirstLine(string s)
         {
             line++;
-            string skippedLine = s.Substring(0, s.IndexOf(Environment.NewLine));
-            Console.WriteLine("skipped line: " + skippedLine);
-            return s.Substring(s.IndexOf(Environment.NewLine) + 2);
+            int index = s.IndexOf("\n");
+            string skippedLine = s.Substring(0, index);
+            return s.Substring(index + 1);
         }
 
         private static void countSkipedLines(string s)
         {
             int count = s.Length - s.Replace("\n", "").Length;
             line += count;
-            Console.WriteLine("skipped lines: " + count);
         }
 
         private static bool matchLexeme(Lexeme lex)
